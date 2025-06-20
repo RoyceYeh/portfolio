@@ -17,7 +17,7 @@ export function useScrollAnimation() {
     console.log('maxScroll', maxScroll)
 
     // 確保 maxScroll 是有效的正數
-    if (scrollTop <= 0) {
+    if (maxScroll <= 0) {
       scrollProgress.value = 0
       return
     }
