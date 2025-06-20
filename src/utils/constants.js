@@ -1,0 +1,17 @@
+export const ANIMATION_CONFIG = {
+  // 滾動區域高度倍數
+  SCROLL_HEIGHT_MULTIPLIER: 5,
+
+  // 各層縮放範圍
+  BACKGROUND_SCALE_RANGE: [1, 1.5],
+  MIDGROUND_SCALE_RANGE: [1, 2.2],
+  FOREGROUND_SCALE_RANGE: [1, 3.5],
+
+  // Z軸推進距離
+  BACKGROUND_Z_RANGE: [0, 50],
+  MIDGROUND_Z_RANGE: [0, 100],
+  FOREGROUND_Z_RANGE: [0, 200],
+
+  // 動畫緩動
+  EASING: 'power2.out',
+}

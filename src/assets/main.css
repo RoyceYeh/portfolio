@@ -1,0 +1,86 @@
+@import './variables.css';
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: auto; /* 讓自定義滾動處理 */
+  /* 隱藏滾動條但保持滾動功能 */
+  overflow: auto;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE 和 Edge */
+}
+
+/* Chrome, Safari, Opera - 隱藏滾動條 */
+html::-webkit-scrollbar {
+  display: none;
+}
+
+body {
+  font-family: 'Inter', 'Arial', sans-serif;
+  overflow-x: hidden;
+  background: var(--forest-dark);
+  color: white;
+  line-height: 1.6;
+  /* 確保 body 也隱藏滾動條 */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE 和 Edge */
+}
+
+/* Chrome, Safari, Opera - body 滾動條隱藏 */
+body::-webkit-scrollbar {
+  display: none;
+}
+
+/* 防止選取文字時影響動畫 */
+.scroll-container * {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* 確保所有動畫元素使用 GPU 加速 */
+.depth-layer {
+  will-change: transform;
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+}
+
+/* 平滑的過渡效果 */
+.smooth-transition {
+  transition: all 0.3s ease-out;
+}
+
+/* 全域容器樣式 */
+#app {
+  width: 100vw;
+  min-height: 100vh;
+  overflow: hidden; /* 確保 app 容器不顯示滾動條 */
+}
+
+/* 確保所有可能的滾動容器都隱藏滾動條 */
+* {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE 和 Edge */
+}
+
+*::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
+/* 響應式字體 */
+@media (max-width: 768px) {
+  body {
+    font-size: 14px;
+  }
+}
+
+/* 觸控裝置優化 */
+@media (hover: none) and (pointer: coarse) {
+  /* 觸控裝置上確保滾動順暢 */
+  html {
+    -webkit-overflow-scrolling: touch;
+  }
+}

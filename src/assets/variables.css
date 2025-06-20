@@ -1,0 +1,51 @@
+:root {
+  /* 森林色彩系統 */
+  --forest-dark: #051a0a;
+  --forest-mid: #0d2818;
+  --forest-light: #1a4d1a;
+  --forest-top: #2c5530;
+  --forest-accent: #4ecdc4;
+
+  /* 文字顏色 */
+  --text-primary: #ffffff;
+  --text-secondary: #e0e0e0;
+  --text-muted: #a0a0a0;
+
+  /* 動畫控制變數 */
+  --scroll-progress: 0;
+  --background-scale: 1;
+  --midground-scale: 1;
+  --foreground-scale: 1;
+  --background-z: 0;
+  --midground-z: 0;
+  --foreground-z: 0;
+
+  /* 透明度控制 */
+  --content-opacity: 1;
+  --light-opacity: 0;
+  --particle-opacity: 0;
+
+  /* 響應式斷點 */
+  --mobile-max: 768px;
+  --tablet-max: 1024px;
+  --desktop-min: 1025px;
+
+  /* 動畫時間 */
+  --transition-fast: 0.2s;
+  --transition-normal: 0.3s;
+  --transition-slow: 0.6s;
+
+  /* 陰影系統 */
+  --shadow-light: 0 2px 10px rgba(0, 0, 0, 0.1);
+  --shadow-medium: 0 4px 20px rgba(0, 0, 0, 0.2);
+  --shadow-heavy: 0 8px 40px rgba(0, 0, 0, 0.3);
+
+  /* Z-index 層級系統 */
+  --z-background: 1;
+  --z-midground: 2;
+  --z-foreground: 3;
+  --z-content: 10;
+  --z-navigation: 50;
+  --z-progress: 100;
+  --z-modal: 1000;
+}
