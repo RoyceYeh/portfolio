@@ -246,7 +246,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch, onBeforeUnmount, nextTick } from 'vue'
 import { useScrollAnimation } from '@/composables/useScrollAnimation'
 import { Swiper, SwiperSlide } from 'swiper/vue'
 import { Navigation, Pagination, Autoplay } from 'swiper/modules'
@@ -259,6 +259,35 @@ import 'swiper/css/pagination'
 
 // 添加響應式檢測
 const { isMobile, isTablet } = useResponsive()
+
+// 滾動位置保持邏輯
+const scrollPositionManager = {
+  savedPosition: 0,
+  isHandlingResize: false,
+
+  savePosition() {
+    this.savedPosition = window.pageYOffset
+  },
+
+  async restorePosition() {
+    if (this.isHandlingResize) return
+
+    this.isHandlingResize = true
+    await nextTick()
+
+    // 使用 requestAnimationFrame 確保在重繪後執行
+    requestAnimationFrame(() => {
+      window.scrollTo({
+        top: this.savedPosition,
+        behavior: 'instant',
+      })
+
+      setTimeout(() => {
+        this.isHandlingResize = false
+      }, 150)
+    })
+  },
+}
 
 // Swiper 模組配置
 const modules = [Navigation, Pagination, Autoplay]
@@ -349,6 +378,29 @@ const contactSwiperConfig = {
 
 // 計算是否使用輪播
 const useSwiper = computed(() => isMobile.value || isTablet.value)
+
+// 監聽響應式變化並保持滾動位置
+let resizeHandler = null
+
+// 監聽 useSwiper 的變化
+watch(useSwiper, async (newValue, oldValue) => {
+  if (oldValue !== undefined && newValue !== oldValue) {
+    scrollPositionManager.savePosition()
+    await scrollPositionManager.restorePosition()
+  }
+})
+
+// 直接監聽 window resize 事件來保持更精確的控制
+const handleWindowResize = () => {
+  if (!scrollPositionManager.isHandlingResize) {
+    scrollPositionManager.savePosition()
+
+    // 短暫延遲後恢復位置
+    setTimeout(() => {
+      scrollPositionManager.restorePosition()
+    }, 50)
+  }
+}
 
 // 個人資訊配置
 const name = ref('葉柏宏')
@@ -470,6 +522,10 @@ const showScrollHint = ref(false)
 // 使用滾動動畫狀態
 const { scrollProgress } = useScrollAnimation()
 
+// 立即執行的調試
+console.log('=== ContentOverlay 開始初始化 ===')
+console.log('scrollProgress 對象:', scrollProgress)
+
 // 計算透明度
 const backgroundOpacity = computed(() => {
   return Math.max(0, 1 - scrollProgress.value / 0.3)
@@ -520,7 +576,19 @@ const startIntroSequence = () => {
 }
 
 onMounted(() => {
+  scrollProgress.value = 0
   startIntroSequence()
+
+  // 綁定 resize 事件監聽器
+  resizeHandler = handleWindowResize
+  window.addEventListener('resize', resizeHandler, { passive: true })
+})
+
+onBeforeUnmount(() => {
+  // 清理事件監聽器
+  if (resizeHandler) {
+    window.removeEventListener('resize', resizeHandler)
+  }
 })
 </script>
 

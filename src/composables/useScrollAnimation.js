@@ -2,7 +2,7 @@ import { ref, onMounted, onUnmounted } from 'vue'
 import { gsap } from 'gsap'
 
 export function useScrollAnimation() {
-  // 響應式狀態
+  // 響應式狀態 - 確保初始值為 0
   const scrollProgress = ref(0)
   const isScrolling = ref(false)
   const windowHeight = ref(0)
@@ -12,14 +12,24 @@ export function useScrollAnimation() {
   let scrollTimeout = null
 
   const updateScrollProgress = () => {
-    const scrollTop = window.pageYOffset
+    const scrollTop = window.scrollY
     const maxScroll = document.documentElement.scrollHeight - window.innerHeight
+    console.log('maxScroll', maxScroll)
+
+    // 確保 maxScroll 是有效的正數
+    if (scrollTop <= 0) {
+      scrollProgress.value = 0
+      return
+    }
 
     // 🔄 反轉滾動邏輯：往上滑 = 推進 = progress 增加
     const rawProgress = scrollTop / maxScroll
     const progress = 1 - rawProgress // 反轉進度
-
+    console.log('progress', progress)
+    // 確保進度值在 0-1 之間，並且初始時為 0
     scrollProgress.value = Math.max(0, Math.min(1, progress))
+
+    console.log('progress', progress)
     isScrolling.value = true
 
     // 清除之前的超時
@@ -33,7 +43,7 @@ export function useScrollAnimation() {
     }, 150)
 
     // 更新 CSS 變數
-    document.documentElement.style.setProperty('--scroll-progress', progress)
+    document.documentElement.style.setProperty('--scroll-progress', scrollProgress.value)
   }
 
   // 節流函數 - 針對觸控裝置優化
@@ -225,12 +235,16 @@ export function useScrollAnimation() {
     documentHeight.value = document.documentElement.scrollHeight
 
     // 螢幕尺寸改變時重新計算動畫
-    updateDepthLayers()
+    setTimeout(() => {
+      updateScrollProgress()
+      updateDepthLayers()
+    }, 100)
   }
 
   // 平滑滾動到指定位置
   const scrollToProgress = (targetProgress, duration = 1.5) => {
-    const targetScrollTop = targetProgress * (document.documentElement.scrollHeight - window.innerHeight)
+    const maxScroll = document.documentElement.scrollHeight - window.innerHeight
+    const targetScrollTop = (1 - targetProgress) * maxScroll // 因為進度是反轉的
 
     gsap.to(window, {
       duration,
@@ -262,12 +276,22 @@ export function useScrollAnimation() {
     }
   }
 
+  // 初始化函數
+  const initialize = () => {
+    // 確保初始狀態正確
+    scrollProgress.value = 0
+    windowHeight.value = window.innerHeight
+    documentHeight.value = document.documentElement.scrollHeight
+
+    // 立即更新一次
+    updateScrollProgress()
+    updateDepthLayers()
+  }
+
   // 生命週期
   onMounted(() => {
     // 初始化
-    handleResize()
-    updateScrollProgress()
-    updateDepthLayers()
+    initialize()
 
     // 選擇合適的滾動處理器
     const scrollHandler = isTouchDevice() ? handleTouchScroll : handleScroll
@@ -288,6 +312,11 @@ export function useScrollAnimation() {
       document.body.style.position = 'relative'
       document.body.style.height = '100%'
     }
+
+    // 延遲再次確保初始化正確
+    setTimeout(() => {
+      initialize()
+    }, 200)
   })
 
   onUnmounted(() => {
