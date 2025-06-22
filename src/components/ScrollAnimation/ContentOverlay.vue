@@ -32,7 +32,7 @@
 
         <!-- 滾動提示 -->
         <div class="scroll-hint" :class="{ visible: showScrollHint }">
-          <span class="scroll-text">往上滑探索我的城堡</span>
+          <span class="scroll-text">滾動滑鼠探索我的城堡</span>
           <div class="scroll-indicator">
             <div class="scroll-arrow"></div>
           </div>
@@ -50,8 +50,8 @@
           <div class="title-line"></div>
         </div>
 
-        <!-- 桌面版：原有的網格布局 -->
-        <div v-if="!useSwiper" class="cards-grid">
+        <!-- 根據項目數量決定是否使用輪播 -->
+        <div v-if="!shouldUseAboutSwiper" class="cards-grid">
           <div class="info-card about-card" v-for="(card, index) in aboutCards" :key="card.title" :style="{ animationDelay: `${index * 0.2}s` }">
             <div class="card-icon">{{ card.icon }}</div>
             <h3>{{ card.title }}</h3>
@@ -59,7 +59,7 @@
           </div>
         </div>
 
-        <!-- 手機/平板版：Swiper 輪播 -->
+        <!-- 超過3個時使用輪播 -->
         <div v-else class="swiper-container">
           <Swiper v-bind="swiperConfig" class="about-swiper">
             <SwiperSlide v-for="(card, index) in aboutCards" :key="card.title">
@@ -85,8 +85,8 @@
           <div class="title-line"></div>
         </div>
 
-        <!-- 桌面版：原有的網格布局 -->
-        <div v-if="!useSwiper" class="cards-grid skills-grid">
+        <!-- 根據項目數量決定是否使用輪播 -->
+        <div v-if="!shouldUseSkillsSwiper" class="cards-grid skills-grid">
           <div class="info-card skill-card" v-for="(skill, index) in skillCategories" :key="skill.category" :style="{ animationDelay: `${index * 0.15}s` }">
             <!-- 保持原有的技能卡內容 -->
             <div class="skill-category">
@@ -101,7 +101,7 @@
           </div>
         </div>
 
-        <!-- 手機/平板版：Swiper 輪播 -->
+        <!-- 超過3個時使用輪播 -->
         <div v-else class="swiper-container">
           <Swiper v-bind="swiperConfig" class="skills-swiper">
             <SwiperSlide v-for="(skill, index) in skillCategories" :key="skill.category">
@@ -132,8 +132,8 @@
           <div class="title-line"></div>
         </div>
 
-        <!-- 桌面版：原有的網格布局 -->
-        <div v-if="!useSwiper" class="cards-grid projects-grid">
+        <!-- 根據項目數量決定是否使用輪播 -->
+        <div v-if="!shouldUseProjectsSwiper" class="cards-grid projects-grid">
           <div class="info-card project-card" v-for="(project, index) in projects" :key="project.title" :style="{ animationDelay: `${index * 0.2}s` }">
             <!-- 保持原有的專案卡內容 -->
             <div class="project-image">
@@ -148,13 +148,13 @@
                 </span>
               </div>
               <div class="project-links">
-                <a href="#" class="project-link">查看詳情</a>
+                <a :href="project.link" target="_blank" class="project-link">查看詳情</a>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- 手機/平板版：Swiper 輪播 -->
+        <!-- 超過3個時使用輪播 -->
         <div v-else class="swiper-container">
           <Swiper v-bind="swiperConfig" class="projects-swiper">
             <SwiperSlide v-for="(project, index) in projects" :key="project.title">
@@ -171,7 +171,7 @@
                     </span>
                   </div>
                   <div class="project-links">
-                    <a href="#" class="project-link">查看詳情</a>
+                    <a :href="project.link" target="_blank" class="project-link">查看詳情</a>
                   </div>
                 </div>
               </div>
@@ -199,8 +199,8 @@
         </div>
 
         <div class="contact-methods">
-          <!-- 桌面版：原有的網格布局 -->
-          <div v-if="!useSwiper" class="contact-grid">
+          <!-- 聯絡方式也遵循同樣規則 -->
+          <div v-if="!shouldUseContactSwiper" class="contact-grid">
             <div class="contact-method" v-for="(contact, index) in contactMethods" :key="contact.type" :style="{ animationDelay: `${index * 0.2}s` }">
               <div class="method-icon">{{ contact.icon }}</div>
               <div class="method-info">
@@ -213,7 +213,7 @@
             </div>
           </div>
 
-          <!-- 手機/平板版：Swiper 輪播 -->
+          <!-- 超過3個時使用輪播 -->
           <div v-else class="swiper-container contact-swiper-container">
             <Swiper v-bind="contactSwiperConfig" class="contact-swiper">
               <SwiperSlide v-for="(contact, index) in contactMethods" :key="contact.type">
@@ -296,6 +296,7 @@ const modules = [Navigation, Pagination, Autoplay]
 const swiperConfig = {
   modules,
   spaceBetween: 20,
+  slidesPerView: 2,
   navigation: {
     nextEl: '.swiper-button-next',
     prevEl: '.swiper-button-prev',
@@ -325,7 +326,7 @@ const swiperConfig = {
       slidesPerView: 2,
       spaceBetween: 24,
     },
-    // 大平板
+    // 大平板和桌面
     1024: {
       slidesPerView: 3,
       spaceBetween: 30,
@@ -365,41 +366,15 @@ const contactSwiperConfig = {
     },
     // 平板
     768: {
-      slidesPerView: 1, // 平板上也顯示一個，讓卡片更大
+      slidesPerView: 1,
       spaceBetween: 24,
     },
     // 大平板
-    1024: {
-      slidesPerView: 1, // 大平板上還是顯示一個
+    1440: {
+      slidesPerView: 1,
       spaceBetween: 30,
     },
   },
-}
-
-// 計算是否使用輪播
-const useSwiper = computed(() => isMobile.value || isTablet.value)
-
-// 監聽響應式變化並保持滾動位置
-let resizeHandler = null
-
-// 監聽 useSwiper 的變化
-watch(useSwiper, async (newValue, oldValue) => {
-  if (oldValue !== undefined && newValue !== oldValue) {
-    scrollPositionManager.savePosition()
-    await scrollPositionManager.restorePosition()
-  }
-})
-
-// 直接監聽 window resize 事件來保持更精確的控制
-const handleWindowResize = () => {
-  if (!scrollPositionManager.isHandlingResize) {
-    scrollPositionManager.savePosition()
-
-    // 短暫延遲後恢復位置
-    setTimeout(() => {
-      scrollPositionManager.restorePosition()
-    }, 50)
-  }
 }
 
 // 個人資訊配置
@@ -465,24 +440,24 @@ const skillCategories = ref([
 const projects = ref([
   {
     emoji: '🌲',
-    title: '沉浸式作品集',
-    description: '使用 Vue 3 和 GSAP 創建的 3D 滾動體驗網站',
-    technologies: ['Vue.js', 'GSAP', 'CSS3'],
-    link: '#',
+    title: '問券調查',
+    description: '科幻風格問券調查專案',
+    technologies: ['Vue3', 'Vite', 'TailwindCSS'],
+    link: 'https://questionnaire-website-nine.vercel.app/',
   },
   {
     emoji: '📱',
-    title: '響應式電商平台',
-    description: '完整的線上購物體驗，包含購物車和支付系統',
-    technologies: ['React', 'Node.js', 'MongoDB'],
-    link: '#',
+    title: '轉盤投票',
+    description: '投票系統專案，主要用於飯店評選活動，有轉盤遊戲。',
+    technologies: ['Vue 3', 'SCSS', 'Pinia'],
+    link: 'https://spin-the-wheel-pi.vercel.app/',
   },
   {
     emoji: '📊',
-    title: '數據視覺化儀表板',
-    description: '互動式圖表和即時數據分析工具',
-    technologies: ['D3.js', 'Vue.js', 'API'],
-    link: '#',
+    title: '刮刮樂',
+    description: '玩家可以體驗互動式的刮刮卡遊戲，享受刮開卡片時的樂趣。',
+    technologies: ['Vue 3', 'PixiJS', 'SCSS'],
+    link: 'https://scratch-card-game.vercel.app/',
   },
 ])
 
@@ -511,6 +486,46 @@ const contactMethods = ref([
   },
 ])
 
+// 基於項目數量的輪播判斷邏輯
+const shouldUseAboutSwiper = computed(() => {
+  return isMobile.value || aboutCards.value.length > 3
+})
+
+const shouldUseSkillsSwiper = computed(() => {
+  return isMobile.value || skillCategories.value.length > 3
+})
+
+const shouldUseProjectsSwiper = computed(() => {
+  return isMobile.value || projects.value.length > 3
+})
+
+const shouldUseContactSwiper = computed(() => {
+  return isMobile.value || contactMethods.value.length > 3
+})
+
+// 監聽響應式變化並保持滾動位置
+let resizeHandler = null
+
+// 🎯 監聽輪播狀態變化
+watch([shouldUseAboutSwiper, shouldUseSkillsSwiper, shouldUseProjectsSwiper, shouldUseContactSwiper], async (newValues, oldValues) => {
+  if (oldValues.some((oldValue, index) => oldValue !== undefined && newValues[index] !== oldValue)) {
+    scrollPositionManager.savePosition()
+    await scrollPositionManager.restorePosition()
+  }
+})
+
+// 直接監聽 window resize 事件來保持更精確的控制
+const handleWindowResize = () => {
+  if (!scrollPositionManager.isHandlingResize) {
+    scrollPositionManager.savePosition()
+
+    // 短暫延遲後恢復位置
+    setTimeout(() => {
+      scrollPositionManager.restorePosition()
+    }, 50)
+  }
+}
+
 // 動畫顯示控制
 const showGreeting = ref(false)
 const showTitle = ref(false)
@@ -523,8 +538,8 @@ const showScrollHint = ref(false)
 const { scrollProgress } = useScrollAnimation()
 
 // 立即執行的調試
-console.log('=== ContentOverlay 開始初始化 ===')
-console.log('scrollProgress 對象:', scrollProgress)
+// console.log('=== ContentOverlay 開始初始化 ===')
+// console.log('scrollProgress 對象:', scrollProgress)
 
 // 計算透明度
 const backgroundOpacity = computed(() => {
@@ -576,12 +591,19 @@ const startIntroSequence = () => {
 }
 
 onMounted(() => {
-  scrollProgress.value = 0
   startIntroSequence()
 
   // 綁定 resize 事件監聽器
   resizeHandler = handleWindowResize
   window.addEventListener('resize', resizeHandler, { passive: true })
+
+  // 🎯 測試用：在控制台暴露新增函數（生產環境可移除）
+  if (typeof window !== 'undefined') {
+    window.addAboutCard = addAboutCard
+    window.addSkillCategory = addSkillCategory
+    window.addProject = addProject
+    window.addContactMethod = addContactMethod
+  }
 })
 
 onBeforeUnmount(() => {
@@ -589,10 +611,19 @@ onBeforeUnmount(() => {
   if (resizeHandler) {
     window.removeEventListener('resize', resizeHandler)
   }
+
+  // 清理測試函數
+  if (typeof window !== 'undefined') {
+    delete window.addAboutCard
+    delete window.addSkillCategory
+    delete window.addProject
+    delete window.addContactMethod
+  }
 })
 </script>
 
 <style scoped>
+/* === 保持原有的所有樣式 === */
 .content-overlay {
   position: fixed;
   top: 0;
@@ -811,23 +842,24 @@ onBeforeUnmount(() => {
 
 .section-cards {
   position: absolute;
-  top: 50%;
+  top: 45%;
   left: 50%;
   transform: translate(-50%, -50%);
   width: 90vw;
   max-width: 1200px;
   pointer-events: auto;
-  max-height: 80vh;
+  max-height: 95vh;
   overflow-y: auto;
   padding: 1rem;
 }
 
 .section-title {
   text-align: center;
-  margin-bottom: 3rem;
+  margin-bottom: 1.5vw;
 }
 
 .section-title h2 {
+  line-height: 1.1;
   font-size: clamp(2.5rem, 5vw, 4rem);
   color: var(--text-primary);
   margin-bottom: 1rem;
@@ -858,6 +890,10 @@ onBeforeUnmount(() => {
 }
 
 .contact-grid {
+  display: grid;
+  row-gap: 30px;
+  column-gap: 30px;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
 }
 
@@ -925,6 +961,7 @@ onBeforeUnmount(() => {
   flex-wrap: wrap;
   gap: 0.5rem;
   margin-bottom: 1.5rem;
+  justify-content: center;
 }
 
 .tech-tag {
@@ -1065,17 +1102,18 @@ onBeforeUnmount(() => {
   border-radius: 30px;
   border: 2px solid rgba(78, 205, 196, 0.3);
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  transform: scale(0.8);
 }
 
 .contact-intro {
-  margin-bottom: 3rem;
+  margin-bottom: 1vw;
 }
 
 .contact-title {
-  font-size: clamp(2.5rem, 6vw, 4.5rem);
+  font-size: clamp(2.5rem, 6vw, 3.5rem);
   font-weight: bold;
   color: var(--text-primary);
-  margin-bottom: 1rem;
+  margin-bottom: 1vw;
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
   animation: titleSlideIn 1s ease-out 0.3s both;
 }
@@ -1083,7 +1121,7 @@ onBeforeUnmount(() => {
 .contact-subtitle {
   font-size: clamp(1.1rem, 2.5vw, 1.5rem);
   color: var(--forest-accent);
-  margin-bottom: 2rem;
+  margin-bottom: 1vw;
   font-weight: 300;
   animation: subtitleSlideIn 1s ease-out 0.5s both;
 }
@@ -1099,28 +1137,30 @@ onBeforeUnmount(() => {
 }
 
 .contact-methods {
-  margin-bottom: 3rem;
+  margin-bottom: 1.5vw;
 }
 
 .contact-method {
-  display: flex;
-  align-items: center;
-  gap: 1.5rem;
-  padding: 1.5rem;
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(15px);
+  border: 1px solid rgba(78, 205, 196, 0.3);
   border-radius: 20px;
-  border: 1px solid rgba(78, 205, 196, 0.2);
+  padding: 2rem;
+  box-shadow: var(--shadow-heavy);
   transition: all var(--transition-normal) ease-out;
   opacity: 0;
   transform: translateY(30px);
-  animation: methodSlideIn 0.8s ease-out forwards;
+  animation: cardSlideUp 0.8s ease-out forwards;
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
 }
 
 .contact-method:hover {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: var(--forest-accent);
   transform: translateY(-5px);
-  box-shadow: 0 10px 25px rgba(78, 205, 196, 0.2);
+  background: rgba(0, 0, 0, 0.9);
+  border-color: var(--forest-accent);
+  box-shadow: 0 10px 30px rgba(78, 205, 196, 0.3);
 }
 
 .method-icon {
@@ -1169,7 +1209,7 @@ onBeforeUnmount(() => {
 
 .contact-footer {
   border-top: 1px solid rgba(78, 205, 196, 0.2);
-  padding-top: 2rem;
+  padding-top: 1vw;
   animation: footerSlideIn 1s ease-out 1.2s both;
 }
 
@@ -1183,7 +1223,7 @@ onBeforeUnmount(() => {
 /* === Swiper 樣式 === */
 .swiper-container {
   position: relative;
-  padding: 0 1rem 3rem 1rem;
+  padding: 0 3.5rem 3rem 3.5rem;
 }
 
 .swiper-card {
@@ -1437,9 +1477,10 @@ onBeforeUnmount(() => {
 /* 響應式設計 */
 @media (max-width: 768px) {
   .section-cards {
+    top: 50%;
     width: 95vw;
-    max-height: 75vh;
-    overflow-y: auto;
+    max-height: 90vh;
+    overflow-y: hidden;
     padding: 1rem 0.5rem;
     scrollbar-width: thin;
     scrollbar-color: var(--forest-accent) transparent;
@@ -1482,7 +1523,7 @@ onBeforeUnmount(() => {
   }
 
   .section-title {
-    margin-bottom: 2rem;
+    margin-bottom: 1.5vw;
   }
 
   .section-title h2 {
@@ -1496,43 +1537,8 @@ onBeforeUnmount(() => {
   }
 
   .contact-methods {
+    padding: 0 1rem;
     margin-bottom: 2rem;
-  }
-
-  /* 聯絡方式網格在手機上隱藏 */
-  .contact-grid {
-    display: none;
-  }
-
-  /* 聯絡方式輪播容器優化 */
-  .contact-swiper-container {
-    padding: 0 0.5rem 2rem 0.5rem;
-    max-width: 100%;
-  }
-
-  .contact-swiper .contact-method {
-    padding: 1.5rem;
-    max-width: 300px;
-  }
-
-  .contact-swiper .method-icon {
-    font-size: 3rem;
-    margin-bottom: 1rem;
-  }
-
-  .contact-swiper .method-info h3 {
-    font-size: 1.3rem;
-    margin-bottom: 0.8rem;
-  }
-
-  .contact-swiper .method-info p {
-    font-size: 0.9rem;
-    margin-bottom: 1.2rem;
-  }
-
-  .contact-swiper .method-link {
-    padding: 0.7rem 1.2rem;
-    font-size: 0.9rem;
   }
 
   .card-icon {
@@ -1571,53 +1577,6 @@ onBeforeUnmount(() => {
 
   .title-line {
     width: 60px;
-  }
-}
-
-/* 平板特殊處理 */
-@media (min-width: 769px) and (max-width: 1024px) {
-  .contact-grid {
-    display: none;
-  }
-
-  .contact-swiper-container {
-    max-width: 600px;
-  }
-
-  .contact-swiper .contact-method {
-    max-width: 450px;
-    padding: 2rem;
-  }
-
-  .contact-swiper .method-icon {
-    font-size: 3.5rem;
-  }
-}
-
-/* 桌面版確保使用網格 */
-@media (min-width: 1025px) {
-  .contact-swiper-container {
-    display: none;
-  }
-
-  .contact-grid {
-    display: grid !important;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 2rem;
-  }
-
-  .cards-grid {
-    display: grid;
-    gap: 2rem;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  }
-
-  .skills-grid {
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  }
-
-  .projects-grid {
-    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
   }
 }
 

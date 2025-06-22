@@ -1,4 +1,4 @@
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, nextTick } from 'vue'
 import { gsap } from 'gsap'
 
 export function useScrollAnimation() {
@@ -8,13 +8,17 @@ export function useScrollAnimation() {
   const windowHeight = ref(0)
   const documentHeight = ref(0)
 
+  // 添加初始化完成標記
+  const isInitialized = ref(false)
+
   // 滾動處理函數
   let scrollTimeout = null
 
   const updateScrollProgress = () => {
     const scrollTop = window.scrollY
     const maxScroll = document.documentElement.scrollHeight - window.innerHeight
-    console.log('maxScroll', maxScroll)
+
+    console.log('updateScrollProgress - scrollTop:', scrollTop, 'maxScroll:', maxScroll)
 
     // 確保 maxScroll 是有效的正數
     if (maxScroll <= 0) {
@@ -22,14 +26,20 @@ export function useScrollAnimation() {
       return
     }
 
-    // 🔄 反轉滾動邏輯：往上滑 = 推進 = progress 增加
+    // 🔄 修正滾動邏輯：
+    // 在頂部 (scrollTop = 0) → progress = 0 (起始狀態)
+    // 往下滾 (scrollTop 增加) → progress 增加 (推進動畫)
     const rawProgress = scrollTop / maxScroll
-    const progress = 1 - rawProgress // 反轉進度
-    console.log('progress', progress)
-    // 確保進度值在 0-1 之間，並且初始時為 0
+
+    // 🎯 關鍵修正：不要反轉！直接使用 rawProgress
+    // 因為您的動畫邏輯是：滾動越多 = 動畫推進越多
+    const progress = rawProgress
+
+    console.log('計算結果 - rawProgress:', rawProgress, 'final progress:', progress)
+
+    // 確保進度值在 0-1 之間
     scrollProgress.value = Math.max(0, Math.min(1, progress))
 
-    console.log('progress', progress)
     isScrolling.value = true
 
     // 清除之前的超時
@@ -241,10 +251,43 @@ export function useScrollAnimation() {
     }, 100)
   }
 
+  // 🔧 修正：強制重置滾動位置和進度
+  const resetScrollProgress = () => {
+    console.log('開始重置滾動進度...')
+
+    // 🎯 關鍵修正：先強制滾動到頂部，再設定進度
+    window.scrollTo(0, 0) // 立即滾動到頂部，不要動畫
+
+    // 等待一幀確保滾動完成
+    requestAnimationFrame(() => {
+      // 立即設定進度為 0
+      scrollProgress.value = 0
+
+      // 重置 CSS 變數
+      document.documentElement.style.setProperty('--scroll-progress', '0')
+      document.documentElement.style.setProperty('--background-scale', '1')
+      document.documentElement.style.setProperty('--background-z', '0px')
+      document.documentElement.style.setProperty('--midground-scale', '1')
+      document.documentElement.style.setProperty('--midground-z', '0px')
+      document.documentElement.style.setProperty('--foreground-scale', '1')
+      document.documentElement.style.setProperty('--foreground-z', '0px')
+      document.documentElement.style.setProperty('--content-opacity', '1')
+      document.documentElement.style.setProperty('--light-opacity', '0')
+      document.documentElement.style.setProperty('--particle-opacity', '0')
+
+      console.log('滾動進度已重置為 0，當前 window.scrollY:', window.scrollY)
+    })
+  }
+
   // 平滑滾動到指定位置
   const scrollToProgress = (targetProgress, duration = 1.5) => {
     const maxScroll = document.documentElement.scrollHeight - window.innerHeight
-    const targetScrollTop = (1 - targetProgress) * maxScroll // 因為進度是反轉的
+
+    // 🎯 修正：如果進度邏輯改了，這裡也要對應調整
+    // 現在 progress 0 = 頂部，progress 1 = 底部
+    const targetScrollTop = targetProgress * maxScroll
+
+    console.log('scrollToProgress - targetProgress:', targetProgress, 'targetScrollTop:', targetScrollTop)
 
     gsap.to(window, {
       duration,
@@ -276,22 +319,100 @@ export function useScrollAnimation() {
     }
   }
 
-  // 初始化函數
-  const initialize = () => {
-    // 確保初始狀態正確
-    scrollProgress.value = 0
+  // 🔧 修正：改進的初始化函數
+  const initialize = async () => {
+    console.log('開始初始化滾動動畫...')
+
+    // 🎯 關鍵修正：立即強制滾動到頂部
+    window.scrollTo(0, 0)
+
+    // 等待 DOM 完全準備好
+    await nextTick()
+
+    // 再次確保滾動位置
+    window.scrollTo(0, 0)
+
+    // 先重置一切
+    resetScrollProgress()
+
+    // 更新視窗尺寸
     windowHeight.value = window.innerHeight
     documentHeight.value = document.documentElement.scrollHeight
 
-    // 立即更新一次
-    updateScrollProgress()
-    updateDepthLayers()
+    // 🎯 關鍵修正：多次確認初始狀態
+    setTimeout(() => {
+      window.scrollTo(0, 0) // 再次確保
+      scrollProgress.value = 0 // 強制設為 0
+      updateScrollProgress()
+      updateDepthLayers()
+      isInitialized.value = true
+      console.log('滾動動畫初始化完成，最終 scrollProgress:', scrollProgress.value)
+    }, 100)
+  }
+
+  // 🔧 修正：頁面載入時的處理
+  const handlePageLoad = () => {
+    // 檢查頁面載入類型
+    const navigation = performance.getEntriesByType('navigation')[0]
+    const isReload = navigation && navigation.type === 'reload'
+    const isInitialLoad = !document.referrer || document.referrer === window.location.href
+
+    console.log('頁面載入類型檢測:')
+    console.log('- navigation.type:', navigation?.type)
+    console.log('- isReload:', isReload)
+    console.log('- isInitialLoad:', isInitialLoad)
+    console.log('- document.referrer:', document.referrer)
+
+    // 🎯 關鍵修正：只有在重新整理或初次載入時才重置
+    const shouldReset = isReload || isInitialLoad
+
+    if (shouldReset) {
+      console.log('🔄 執行重置：這是重新整理或初次載入')
+      // 確保頁面完全載入後才初始化
+      if (document.readyState === 'complete') {
+        initialize()
+      } else {
+        window.addEventListener('load', initialize, { once: true })
+      }
+    } else {
+      console.log('✅ 保持現狀：這是頁面間的導航，保持滾動位置')
+      // 頁面間導航，保持現有滾動位置，但確保系統正常運作
+      initializeWithoutReset()
+    }
+  }
+
+  // 🎯 新增：不重置的初始化函數
+  const initializeWithoutReset = async () => {
+    console.log('開始不重置的初始化...')
+
+    // 等待 DOM 完全準備好
+    await nextTick()
+
+    // 更新視窗尺寸
+    windowHeight.value = window.innerHeight
+    documentHeight.value = document.documentElement.scrollHeight
+
+    // 🎯 關鍵：不重置滾動位置，只更新進度計算
+    requestAnimationFrame(() => {
+      updateScrollProgress() // 基於當前滾動位置計算進度
+      updateDepthLayers()
+      isInitialized.value = true
+      console.log('不重置的初始化完成，當前 scrollProgress:', scrollProgress.value)
+    })
   }
 
   // 生命週期
-  onMounted(() => {
-    // 初始化
-    initialize()
+  onMounted(async () => {
+    console.log('組件掛載，開始初始化滾動動畫')
+
+    // 🎯 修正：不要立即重置，讓 handlePageLoad 決定
+    // 防止瀏覽器自動恢復滾動位置的設定保留，但不立即執行
+    if ('scrollRestoration' in history) {
+      history.scrollRestoration = 'manual'
+    }
+
+    // 🔧 修正：交給 handlePageLoad 決定是否重置
+    handlePageLoad()
 
     // 選擇合適的滾動處理器
     const scrollHandler = isTouchDevice() ? handleTouchScroll : handleScroll
@@ -313,10 +434,36 @@ export function useScrollAnimation() {
       document.body.style.height = '100%'
     }
 
-    // 延遲再次確保初始化正確
-    setTimeout(() => {
-      initialize()
-    }, 200)
+    // 🔧 修正：只在真正的頁面隱藏/顯示時重置（比如切換標籤頁回來）
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) {
+        // 頁面重新顯示時，檢查是否需要重新計算
+        setTimeout(() => {
+          console.log('頁面重新顯示，重新計算滾動狀態')
+          updateScrollProgress()
+          updateDepthLayers()
+        }, 100)
+      }
+    })
+
+    // 🎯 關鍵修正：區分不同的 pageshow 情況
+    window.addEventListener('pageshow', (event) => {
+      console.log('pageshow 事件觸發:', {
+        persisted: event.persisted,
+        type: 'pageshow',
+      })
+
+      if (event.persisted) {
+        // 從瀏覽器快取載入（前進/後退）
+        console.log('📥 從快取載入，保持滾動位置')
+        setTimeout(() => {
+          // 重新計算但不重置位置
+          updateScrollProgress()
+          updateDepthLayers()
+        }, 50)
+      }
+      // 如果不是 persisted，表示是正常載入，已經由 handlePageLoad 處理
+    })
   })
 
   onUnmounted(() => {
@@ -325,6 +472,7 @@ export function useScrollAnimation() {
     window.removeEventListener('scroll', handleTouchScroll)
     window.removeEventListener('resize', handleResize)
     window.removeEventListener('wheel', preventOverscroll)
+    window.removeEventListener('load', initialize)
 
     if (scrollTimeout) {
       clearTimeout(scrollTimeout)
@@ -337,11 +485,13 @@ export function useScrollAnimation() {
     isScrolling,
     windowHeight,
     documentHeight,
+    isInitialized,
 
     // 方法
     calculateDepthTransform,
     scrollToProgress,
     scrollToSection,
     updateDepthLayers,
+    resetScrollProgress, // 🔧 新增：暴露重置方法
   }
 }
