@@ -20,15 +20,6 @@
         <span class="dot-label">{{ section.name }}</span>
       </div>
     </div>
-
-    <!-- 滾動方向提示 -->
-    <!-- <div class="scroll-direction" v-show="showDirection">
-      <div class="direction-arrow" :class="{ 'scrolling-up': isScrollingUp }">
-        <svg viewBox="0 0 24 24" width="20" height="20">
-          <path d="M7 14l5-5 5 5z" fill="var(--forest-accent)" />
-        </svg>
-      </div>
-    </div> -->
   </div>
 </template>
 

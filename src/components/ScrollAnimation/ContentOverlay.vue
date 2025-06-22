@@ -475,7 +475,7 @@ const contactMethods = ref([
     type: 'Resume',
     description: '專業履歷與工作經歷',
     value: '開啟連結',
-    link: 'https://drive.google.com/file/d/1i9KHmcMc-M7T-d4Rw9W9Cg-tdUH12J_6/view?usp=sharing',
+    link: 'https://drive.google.com/drive/folders/1fgT7el0PifvVf5-OXUKVYV1i8-qBa2aZ?usp=sharing',
   },
   {
     icon: '🐙',
