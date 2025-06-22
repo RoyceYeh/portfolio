@@ -1006,7 +1006,7 @@ onBeforeUnmount(() => {
 }
 
 .project-image {
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.5vw;
   text-align: center;
 }
 
@@ -1021,13 +1021,13 @@ onBeforeUnmount(() => {
 .project-info h3 {
   font-size: 1.4rem;
   color: var(--forest-accent);
-  margin-bottom: 1rem;
+  margin-bottom: 1.5vw;
 }
 
 .project-info p {
   color: var(--text-secondary);
   line-height: 1.6;
-  margin-bottom: 1.5rem;
+  margin-bottom: 2vw;
 }
 
 .project-tech {
@@ -1507,6 +1507,7 @@ onBeforeUnmount(() => {
 
   .info-card {
     padding: 1.5rem;
+    padding-bottom: 2rem;
   }
 
   .hero-content {
