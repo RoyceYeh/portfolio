@@ -640,7 +640,7 @@ onBeforeUnmount(() => {
   top: 0;
   left: 0;
   width: 100%;
-  height: 100%;
+  height: 120%;
   background: linear-gradient(135deg, var(--forest-dark) 0%, var(--forest-mid) 30%, var(--forest-light) 60%, var(--forest-top) 100%);
   transition: opacity 0.8s ease-out;
   z-index: 1;
@@ -1085,7 +1085,7 @@ onBeforeUnmount(() => {
   top: 0;
   left: 0;
   width: 100%;
-  height: 100%;
+  height: 120%;
   background: linear-gradient(45deg, var(--forest-dark) 0%, var(--forest-mid) 25%, var(--forest-light) 50%, var(--forest-top) 75%, var(--forest-accent) 100%);
   opacity: 0.95;
 }
@@ -1559,7 +1559,7 @@ onBeforeUnmount(() => {
 @media (max-width: 480px) {
   .section-cards {
     width: 98vw;
-    max-height: 70vh;
+    max-height: 90vh;
     padding: 0.8rem 0.3rem;
   }
 
